@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SentimentScope — NLP Analytics Platform</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <span class="logo-icon">◈</span>
+        <span>Sentiment<strong>Scope</strong></span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#hero"      class="nav-link active">Home</a></li>
+        <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
+        <li><a href="#insights"  class="nav-link">Insights</a></li>
+        <li><a href="#about"     class="nav-link">About</a></li>
+      </ul>
+      <div class="nav-right">
+        <button class="icon-btn" id="searchToggleBtn" title="Search">⌕</button>
+        <div class="api-status-pill" id="apiStatusPill">
+          <span class="api-dot" id="apiDot"></span>
+          <span id="apiStatusText">connecting…</span>
+        </div>
+        <button class="btn-export" id="exportReportBtn"><i class="fas fa-file-lines"></i> Export Report</button>
+        <button class="btn-live" id="liveBtn">
+          <span class="live-dot"></span>Live Analysis
+        </button>
+      </div>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-search-bar" id="navSearchBar">
+      <div class="nav-search-inner">
+        <span class="search-icon-inline">⌕</span>
+        <input type="text" id="globalSearchInput" class="global-search-input"
+               placeholder="Search keyword, topic or phrase… e.g. 'love', 'tech', 'music'" />
+        <button class="search-clear-btn" id="searchClearBtn">✕</button>
+        <button class="search-submit-btn" id="searchSubmitBtn">Analyze</button>
+      </div>
+      <div class="search-chips">
+        <span class="chip-label">Quick:</span>
+        <button class="search-chip" data-q="tech">tech</button>
+        <button class="search-chip" data-q="music">music</button>
+        <button class="search-chip" data-q="politics">politics</button>
+        <button class="search-chip" data-q="health">health</button>
+        <button class="search-chip" data-q="love">love</button>
+        <button class="search-chip" data-q="bad">bad</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#hero">Home</a>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#insights">Insights</a>
+    <a href="#about">About</a>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-text">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            10K+ Posts • Live Trend Monitoring
+          </div>
+          <h1>Track Public <span class="gradient-text">Sentiment &amp; Emerging Trends</span> Instantly</h1>
+          <p class="hero-sub">
+            Track sentiment patterns, trending discussions, and audience perception in real time through interactive analytics.
+          </p>
+          <div class="hero-actions">
+            <a href="#dashboard" class="btn-primary">Explore Dashboard <span class="arrow">→</span></a>
+            <a href="#insights" class="btn-outline">View Insights</a>
+          </div>
+        </div>
+        <!-- RIGHT: Gauge card + mini chart -->
+        <div class="hero-visual">
+          <div class="gauge-card glass-card">
+            <div class="gauge-label">Compound Sentiment Score</div>
+            <div class="gauge-wrap">
+              <canvas id="gaugeChart" width="220" height="120"></canvas>
+              <div class="gauge-center">
+                <div class="gauge-score" id="gaugeScore">—</div>
+                <div class="gauge-sublabel" id="gaugeLabel">calculating…</div>
+              </div>
+            </div>
+            <div class="gauge-scale">
+              <span class="red">−1.0</span>
+              <span class="muted">Neutral</span>
+              <span class="cyan">+1.0</span>
+            </div>
+          </div>
+          <div class="hero-mini-card glass-card">
+            <div class="hmc-header">
+              <span class="hmc-title">30-day trend</span>
+              <span class="hmc-badge" id="heroTrendPct">↑ —</span>
+            </div>
+            <canvas id="heroMiniChart" width="240" height="70"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="container">
+      <div class="kpi-strip">
+        <div class="kpi-card">
+          <div class="kpi-icon-wrap teal"><i class="fas fa-comments"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Total Posts</div>
+            <div class="kpi-value" id="kpiTotalVal">—</div>
+            <div class="kpi-sub">Live data</div>
+          </div>
+          <canvas id="kpiSparkline1" class="kpi-spark" width="80" height="36"></canvas>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon-wrap green"><i class="fas fa-arrow-trend-up"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Positive</div>
+            <div class="kpi-value cyan" id="kpiPosVal">—</div>
+            <div class="kpi-sub">Positive engagement</div>
+          </div>
+          <canvas id="kpiRing1" class="kpi-ring-canvas" width="52" height="52"></canvas>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon-wrap red"><i class="fas fa-arrow-trend-down"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Negative</div>
+            <div class="kpi-value red" id="kpiNegVal">—</div>
+            <div class="kpi-sub">Negative feedback</div>
+          </div>
+          <canvas id="kpiRing2" class="kpi-ring-canvas" width="52" height="52"></canvas>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon-wrap yellow"><i class="fas fa-fire"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Trending Topic</div>
+            <div class="kpi-value yellow" id="kpiTrendVal">—</div>
+            <div class="kpi-sub" id="kpiLastUpdated">Updated —</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="section dashboard-section" id="dashboard">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Analytics Dashboard</h2>
+        <p class="section-sub">Real-time analysis across <span id="dashPostCount">—</span> posts</p>
+      </div>
+      <div class="section-header-right">
+        <span class="last-updated-tag" id="lastUpdatedTag">—</span>
+        <span class="section-badge" id="dashBadge">Live</span>
+      </div>
+    </div>
+
+    <div class="loading-overlay hidden" id="loadingOverlay">
+      <div class="loader-ring"></div>
+      <p class="loader-text" id="loaderText">Fetching data…</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-row glass-card">
+      <div class="filter-group">
+        <span class="filter-icon">📅</span>
+        <div class="filter-info">
+          <label class="filter-label">Period</label>
+          <select class="filter-select" id="filterPeriod">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly" selected>Monthly</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <span class="filter-icon">#</span>
+        <div class="filter-info">
+          <label class="filter-label">Topic</label>
+          <select class="filter-select" id="filterKeyword">
+            <option value="all">All Topics</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <span class="filter-icon">🌐</span>
+        <div class="filter-info">
+          <label class="filter-label">Region</label>
+          <select class="filter-select" id="filterRegion">
+            <option value="all">All Regions</option>
+            <option value="North America">North America</option>
+            <option value="Europe">Europe</option>
+            <option value="Asia Pacific">Asia Pacific</option>
+            <option value="Latin America">Latin America</option>
+            <option value="Middle East">Middle East</option>
+            <option value="South Asia">South Asia</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <span class="filter-icon">🎭</span>
+        <div class="filter-info">
+          <label class="filter-label">Sentiment</label>
+          <select class="filter-select" id="filterSentiment">
+            <option value="all">All</option>
+            <option value="Positive">Positive</option>
+            <option value="Negative">Negative</option>
+            <option value="Neutral">Neutral</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-reset" id="resetFilters">↺ Reset</button>
+    </div>
+
+    <div class="search-result-banner" id="searchResultBanner" style="display:none">
+      <span>🔍 Results for "<strong id="bannerQuery"></strong>"</span>
+      <button class="banner-clear" id="bannerClear">✕ Clear</button>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+      <!-- Pie -->
+      <div class="chart-card glass-card span-1">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Sentiment Split</h3>
+          <span class="chart-badge" id="pieTotalBadge">—</span>
+        </div>
+        <div class="chart-skeleton" id="pieSkeleton"></div>
+        <div id="pieContent" class="hidden-block">
+          <div class="pie-wrapper">
+            <canvas id="pieChart"></canvas>
+            <div class="pie-center-label">
+              <div class="pie-total" id="pieTotalNum">—</div>
+              <div class="pie-total-label">posts</div>
+            </div>
+          </div>
+          <div class="pie-legend">
+            <div class="legend-item">
+              <span class="legend-dot" style="background:var(--cyan)"></span>
+              <span class="legend-label">Positive</span>
+              <span class="legend-val cyan" id="legendPos">—</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:var(--red)"></span>
+              <span class="legend-label">Negative</span>
+              <span class="legend-val red" id="legendNeg">—</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot" style="background:#6b7a99"></span>
+              <span class="legend-label">Neutral</span>
+              <span class="legend-val muted" id="legendNeu">—</span>
+            </div>
+          </div>
+          <!-- Stacked score bar -->
+          <div class="score-bar-wrap">
+            <div class="score-bar-track">
+              <div class="score-bar-seg pos" id="scoreBarPos" style="width:0%"></div>
+              <div class="score-bar-seg neu" id="scoreBarNeu" style="width:0%"></div>
+              <div class="score-bar-seg neg" id="scoreBarNeg" style="width:0%"></div>
+            </div>
+            <div class="score-bar-labels">
+              <span class="cyan" id="sblPos">—</span>
+              <span class="muted" id="sblNeu">—</span>
+              <span class="red" id="sblNeg">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line -->
+      <div class="chart-card glass-card span-2">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Sentiment Over Time</h3>
+          <div class="time-toggle">
+            <button class="toggle-btn" data-period="daily">Daily</button>
+            <button class="toggle-btn" data-period="weekly">Weekly</button>
+            <button class="toggle-btn active" data-period="monthly">Monthly</button>
+          </div>
+        </div>
+        <div class="chart-skeleton tall" id="lineSkeleton"></div>
+        <canvas id="lineChart" class="hidden-block"></canvas>
+      </div>
+
+      <!-- Bar -->
+      <div class="chart-card glass-card span-2">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Topic Breakdown</h3>
+          <span class="chart-hint">Stacked by sentiment</span>
+        </div>
+        <div class="chart-skeleton" id="barSkeleton"></div>
+        <canvas id="barChart" class="hidden-block"></canvas>
+      </div>
+
+      <!-- Word cloud -->
+      <div class="chart-card glass-card span-1">
+        <div class="chart-card-header">
+          <h3 class="chart-title">Trending Words</h3>
+        </div>
+        <div class="chart-skeleton" id="cloudSkeleton"></div>
+        <div class="word-cloud hidden-block" id="wordCloud"></div>
+      </div>
+    </div>
+
+    <!-- Region grid -->
+    <div class="region-section">
+      <div class="region-section-header">
+        <h3 class="region-title">Regional Breakdown</h3>
+        <span class="region-subtitle">Sentiment across 6 geographic regions</span>
+      </div>
+      <div class="region-grid" id="regionGrid"></div>
+    </div>
+
+    <!-- Anomaly section -->
+    <div class="anomaly-section" id="anomalySection" style="display:none">
+      <div class="anomaly-header">
+        <span>🚨</span>
+        <h3>Sentiment Spikes Detected</h3>
+        <span class="anomaly-badge" id="anomalyCount">0</span>
+      </div>
+      <div class="anomaly-list" id="anomalyList"></div>
+    </div>
+  </section>
+
+  <!-- INSIGHTS -->
+  <section class="section insights-section" id="insights">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Key Insights & Recommendations</h2>
+        <p class="section-sub">Real-time updates across filtered results</p>
+      </div>
+      <div class="section-header-right">
+        <button class="btn-export-report" id="exportReportBtnSection">
+          <i class="fas fa-file-lines"></i> Export Report
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 1: Insights + Recommendations (equal height cards) -->
+    <div class="insights-grid">
+      <div class="glass-card insights-card">
+        <div class="insights-card-header">
+          <span class="insights-icon">📊</span>
+          <h3>Analysis Insights</h3>
+        </div>
+        <ul class="insights-list" id="dynamicInsightsList">
+          <li class="insight-item skeleton-insight"><div class="skeleton-line"></div></li>
+          <li class="insight-item skeleton-insight"><div class="skeleton-line short"></div></li>
+          <li class="insight-item skeleton-insight"><div class="skeleton-line"></div></li>
+        </ul>
+      </div>
+
+      <div class="glass-card insights-card">
+        <div class="insights-card-header">
+          <span class="insights-icon">🎯</span>
+          <h3>Recommendations</h3>
+        </div>
+        <ul class="recs-list" id="dynamicRecsList">
+          <li class="rec-item skeleton-insight"><div class="skeleton-line"></div></li>
+          <li class="rec-item skeleton-insight"><div class="skeleton-line short"></div></li>
+          <li class="rec-item skeleton-insight"><div class="skeleton-line"></div></li>
+        </ul>
+        <div class="conf-band-wrap">
+          <span class="conf-band-label">Model Confidence</span>
+          <div class="conf-band-track">
+            <div class="conf-band-fill" id="confBandFill" style="width:0%"></div>
+          </div>
+          <span class="conf-band-pct" id="confBandPct">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Signal Evidence — full width, standalone -->
+    <div class="glass-card evidence-standalone" id="evidenceSection" style="display:none">
+      <div class="evidence-standalone-header">
+        <span class="evidence-label">Signal Evidence</span>
+        <span class="evidence-hint">Representative posts from the dataset</span>
+      </div>
+      <div class="evidence-cards-row" id="evidenceCards"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section about-section" id="about">
+    <div class="section-header"><h2 class="section-title">About SentimentScope</h2></div>
+    <div class="about-grid">
+      <div class="glass-card about-card">
+        <div class="about-icon">🌐</div>
+        <h4> Project Overview</h4>
+        <p>SentimentScope transforms large volumes of social data into clear, actionable insights.
+It analyzes thousands of conversations to uncover sentiment patterns, trends, and emerging topics across time and regions.</p>
+      </div>
+      <div class="glass-card about-card">
+        <div class="about-icon">🗄️</div>
+        <h4> Data Processing</h4>
+        <p>Raw data is cleaned, structured, and enriched to ensure consistent and reliable analysis.
+The system identifies sentiment, extracts key terms, and tracks changes in discussion patterns over time.</p>
+      </div>
+      <div class="glass-card about-card">
+        <div class="about-icon">⚙️</div>
+        <h4> Platform Capabilities</h4>
+        <ol class="how-steps">
+          <li>Real-time sentiment tracking</li>
+          <li>Keyword and trend analysis</li>
+          <li>Region-based filtering</li>
+          <li>Time-series insights and pattern detection</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <a href="#" class="nav-logo"><span class="logo-icon">◈</span><span>Sentiment<strong>Scope</strong></span></a>
+      <p class="footer-copy">© 2026 SentimentScope </p>
+      <div class="footer-socials">
+        <a href="https://www.linkedin.com/in/anupama-bain-36b263282/" target="_blank" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+        <a href="https://github.com/GitByAnu" target="_blank" class="social-icon"><i class="fab fa-github"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
