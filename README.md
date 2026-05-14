@@ -219,10 +219,6 @@ gunicorn app:app
 
 ---
 
-## License
-
-This project is developed for educational and portfolio purposes.
-
 ---
 
 ## Author
